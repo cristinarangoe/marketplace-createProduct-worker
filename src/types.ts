@@ -13,27 +13,27 @@ export interface Todo extends Document {
 	todo: string;
 }
 
-export interface characteristics{
-    type: string,
-    value: string,
+export interface characteristics {
+	type: string;
+	value: string;
 }
 
 export interface ProductInfo {
-    name: string,
-    price: number,
-    image: string,
-    description: string,
-    characteristics: characteristics[],
-    idBusiness: string,
-    category: string,
+	name: string;
+	price: number;
+	image: File;
+	description: string;
+	characteristics: characteristics[];
+	idBusiness: string;
+	category: string;
 }
 
 export interface ProductDB extends Document {
-    name: string,
-    price: number,
-    image: string,
-    description: string,
-    characteristics: characteristics[],
-    idBusiness: string,
-    category: string,
+	name: string;
+	price: number;
+	image: string;
+	description: string;
+	characteristics: characteristics[];
+	idBusiness: string;
+	category: string;
 }

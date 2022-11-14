@@ -1,39 +1,49 @@
 import { ProductDB, ProductInfo } from './../types';
 import { Hono } from 'hono';
 import * as Realm from 'realm-web';
+import { BodyData } from 'hono/utils/body';
 
 const product = new Hono();
 
 let RealmApp: Realm.App;
 const ObjectId = Realm.BSON.ObjectID;
 
-product.post('/createProduct/:id/:category', async (c) => {
-	try {
-		const idBusiness = c.req.param('id');
-		const category = c.req.param('category');
+interface ProductReq {
+	idBusiness: string;
+	businessType: string;
+	name: string;
+	description: string;
+	characteristics: {
+		type: string;
+		value: string;
+	}[];
+	price: number;
+}
 
+interface ProductDB extends ProductReq {
+	image: Blob | undefined;
+}
+
+product.post('/createProduct', async (c) => {
+	try {
 		RealmApp = RealmApp || new Realm.App(c.env.MONGO_DB_APP_ID);
 
 		const credentials = Realm.Credentials.apiKey(c.env.MONGO_DB_API_KEY);
 
-		//duda 
+		//duda
 		let user = await RealmApp.logIn(credentials);
 		let mongoClient = user.mongoClient('mongodb-atlas');
 
 		//duda
-		const body: ProductInfo[] = await c.req.json();
+		// console.log(c.req.header);
+		const body = await c.req.parseBody();
+		parseProducts(body);
+		// console.log(body);
 
-		body.map((p) => {
-			p.idBusiness = idBusiness;
-			p.category = category;
-		})
-
-		console.log(body)
-
-		const collection = mongoClient
-			.db('users')
-			.collection<ProductDB>('Products');
-		await collection.insertMany(body);
+		// const collection = mongoClient
+		// 	.db('users')
+		// 	.collection<ProductDB>('Products');
+		// await collection.insertMany(body);
 
 		return new Response('Product saved', {
 			status: 201,
@@ -46,5 +56,29 @@ product.post('/createProduct/:id/:category', async (c) => {
 		});
 	}
 });
+
+function parseProducts(products: BodyData) {
+	const map = new Map(Object.entries(products));
+	const arr = Array(map.size / 2).fill({});
+	map.forEach((val, key) => {
+		const index = parseInt(key.split('_').pop() as string);
+		if (val instanceof Blob) {
+			const tmp = arr[index];
+			tmp.image = val;
+			arr[index] = tmp;
+		}
+		if (typeof val === 'string') {
+			const tmp = arr[index];
+			tmp.product = val;
+			arr[index] = tmp;
+		}
+	});
+
+	const result = arr.map((val) => ({
+		...JSON.parse(val.product),
+		image: val.image,
+	}));
+	console.log(result);
+}
 
 export default product;
