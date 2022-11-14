@@ -1,4 +1,4 @@
-import { ProductDB, ProductInfo } from './../types';
+import { ProductInfo } from './../types';
 import { Hono } from 'hono';
 import * as Realm from 'realm-web';
 import { BodyData } from 'hono/utils/body';
@@ -37,7 +37,15 @@ product.post('/createProduct', async (c) => {
 		//duda
 		// console.log(c.req.header);
 		const body = await c.req.parseBody();
-		parseProducts(body);
+		const products: ProductDB[] = parseProducts(body);
+		console.log(products[0].image);
+		const newFile = new File([products[0].image!], `$test_image.png`, {
+			type: products[0].image?.type,
+		});
+
+		const file = await c.env.MY_BUCKET.put('test', newFile);
+		console.log(file);
+
 		// console.log(body);
 
 		// const collection = mongoClient
@@ -78,7 +86,7 @@ function parseProducts(products: BodyData) {
 		...JSON.parse(val.product),
 		image: val.image,
 	}));
-	console.log(result);
+	return result;
 }
 
 export default product;

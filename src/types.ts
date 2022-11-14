@@ -1,6 +1,7 @@
 import * as Realm from 'realm-web';
 
 export interface Env {
+	MY_BUCKET: R2Bucket;
 	MONGO_DB_APP_ID: string;
 	MONGO_DB_API_KEY: string;
 }
