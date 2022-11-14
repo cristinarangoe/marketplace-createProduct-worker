@@ -1,28 +1,29 @@
-import { ProductInfo } from './../types';
+import { ProductDB, ProductInfo } from './../types';
 import { Hono } from 'hono';
 import * as Realm from 'realm-web';
 import { BodyData } from 'hono/utils/body';
+import { sha256 } from 'hono/utils/crypto';
 
 const product = new Hono();
 
 let RealmApp: Realm.App;
 const ObjectId = Realm.BSON.ObjectID;
 
-interface ProductReq {
-	idBusiness: string;
-	businessType: string;
-	name: string;
-	description: string;
-	characteristics: {
-		type: string;
-		value: string;
-	}[];
-	price: number;
-}
+// interface ProductReq {
+// 	idBusiness: string;
+// 	businessType: string;
+// 	name: string;
+// 	description: string;
+// 	characteristics: {
+// 		type: string;
+// 		value: string;
+// 	}[];
+// 	price: number;
+// }
 
-interface ProductDB extends ProductReq {
-	image: Blob | undefined;
-}
+// interface ProductDB extends ProductReq {
+// 	image: Blob | undefined;
+// }
 
 product.post('/createProduct', async (c) => {
 	try {
@@ -30,28 +31,23 @@ product.post('/createProduct', async (c) => {
 
 		const credentials = Realm.Credentials.apiKey(c.env.MONGO_DB_API_KEY);
 
-		//duda
 		let user = await RealmApp.logIn(credentials);
 		let mongoClient = user.mongoClient('mongodb-atlas');
 
-		//duda
 		// console.log(c.req.header);
-		const body = await c.req.parseBody();
-		const products: ProductDB[] = parseProducts(body);
-		console.log(products[0].image);
-		const newFile = new File([products[0].image!], `$test_image.png`, {
-			type: products[0].image?.type,
-		});
-
-		const file = await c.env.MY_BUCKET.put('test', newFile);
-		console.log(file);
+		const body: ProductDB[] = await c.req.json();
+		// const body = await c.req.parseBody();
+		// const products: ProductDB[] = parseProducts(body);
+		// console.log(products[0].image);
+		// const file = await c.env.MY_BUCKET.put('test', products[0].image!);
+		// console.log(file);
 
 		// console.log(body);
 
-		// const collection = mongoClient
-		// 	.db('users')
-		// 	.collection<ProductDB>('Products');
-		// await collection.insertMany(body);
+		const collection = mongoClient
+			.db('users')
+			.collection<ProductDB>('Products');
+		await collection.insertMany(body);
 
 		return new Response('Product saved', {
 			status: 201,
